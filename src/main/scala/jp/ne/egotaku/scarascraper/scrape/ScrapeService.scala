@@ -28,11 +28,10 @@ class ScrapeImpl {
   }
   def download(list: List[Element]) = {
     println(list.length)
-    val result = list.map(e => {
+    list.map(e => {
       if (e.attr("src").startsWith("https://"))
         save(e.attr("src"))
     })
-
   }
 
   private def save(url: String) = {
@@ -40,5 +39,6 @@ class ScrapeImpl {
     val file = new File(s"/Users/satoutakuya/testimage/$sequence")
     sequence += 1
     Resource.fromFile(file).write(data)
+    file
   }
 }

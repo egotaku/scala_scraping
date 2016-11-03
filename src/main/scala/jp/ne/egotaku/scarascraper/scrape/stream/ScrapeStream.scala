@@ -5,12 +5,11 @@ package jp.ne.egotaku.scarascraper.scrape.stream
   */
 
 import scala.concurrent._
-
 import akka.actor._
 import akka.stream._
 import akka.stream.scaladsl._
-
-import javax.imageio.ImageIO._
+import java.io.{File, IOException}
+import javax.imageio.ImageIO
 
 import jp.ne.egotaku.scarascraper.scrape._
 
@@ -23,13 +22,24 @@ class ScrapeStream {
     "http://seiga.nicovideo.jp/tag/%E3%82%BB%E3%82%A4%E3%83%90%E3%83%BC",
     "http://seiga.nicovideo.jp/search/%E3%82%A4%E3%83%AA%E3%83%A4?target=illust"
   )
-  val source = Source(targetUrls).mapAsyncUnordered(3){url =>
-    val scraper = new ScrapeImpl()
+  val scraper = new ScrapeImpl()
+  val source = Source(targetUrls).mapAsyncUnordered(3) {url =>
     scraper.scrape(url)
   }
 
+  val step = Flow[List[File]].mapAsyncUnordered(3) {files =>
+    files.map(file => if (imageSizeCheck(file)) file)
+  }
 
-  def imageSizeCheck()
-  
-
+  def imageSizeCheck(file: File) = {
+    try {
+      val image = ImageIO.read(file)
+      if (image.getHeight() <= 50 || image.getWidth() <= 50) {
+        false
+      }
+      true
+    } catch {
+      case e: IOException => false
+    }
+  }
 }
