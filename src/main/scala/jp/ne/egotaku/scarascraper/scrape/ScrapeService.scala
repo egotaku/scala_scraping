@@ -23,20 +23,24 @@ class ScrapeImpl {
     val images = doc >?> elementList("img")
     images match {
       case Some(l) => download(l)
-      case None => println("nothing")
+      case None => List.empty[File]
     }
   }
   def download(list: List[Element]) = {
-    println(list.length)
-    list.map(e => {
-      if (e.attr("src").startsWith("https://"))
-        save(e.attr("src"))
-    })
+    //println(list)
+    //list.foreach(e => if (e.attr("src").startsWith("https://")) save(e.attr("src")))
+    for {
+      e <- list
+      if (e.attr("src").startsWith("http://"))
+    } yield {
+      save(e.attr("src"))
+    }
   }
 
   private def save(url: String) = {
+    //println(url)
     val data = Resource.fromURL(url).byteArray
-    val file = new File(s"/Users/satoutakuya/testimage/$sequence")
+    val file = new File(s"/Users/takuya_st/testimage/$sequence")
     sequence += 1
     Resource.fromFile(file).write(data)
     file
