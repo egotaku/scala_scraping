@@ -9,9 +9,11 @@ import akka.actor._
 import akka.stream._
 import akka.stream.scaladsl._
 import java.io.{File, IOException}
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.imageio.ImageIO
-import scala.sys.process._
 
+import scala.sys.process._
 import jp.ne.egotaku.scarascraper.scrape._
 
 class ScrapeStream {
@@ -77,5 +79,9 @@ class ScrapeStream {
     val path = file.getPath()
     Process("mv " + path + " /Users/takuya_st/moveimage/" + file.getName).lineStream
     println(path)
+
+    val f = DateTimeFormatter.ofPattern("HH:mm:ss SSS")
+    val end = LocalDateTime.now()
+    println(end.format(f))
   }
 }
