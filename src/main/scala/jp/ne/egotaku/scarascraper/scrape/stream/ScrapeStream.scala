@@ -23,13 +23,10 @@ class ScrapeStream {
     "http://seiga.nicovideo.jp/tag/%E3%82%BB%E3%82%A4%E3%83%90%E3%83%BC",
     "http://seiga.nicovideo.jp/search/%E3%82%A4%E3%83%AA%E3%83%A4?target=illust"
   )
-  val source = Source(targetUrls).mapAsyncUnordered(3){url =>
+  /*val source = Source(targetUrls).mapAsyncUnordered(3){url =>
     val scraper = new ScrapeImpl()
     scraper.scrape(url)
-  }
-
-
-  def imageSizeCheck()
+  }*/
   
 
 }
