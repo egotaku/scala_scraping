@@ -18,7 +18,7 @@ object ScrapeMain {
     val f = DateTimeFormatter.ofPattern("HH:mm:ss SSS")
     println(start.format(f))
     //targetUrls.par.map()
-    targetUrls.foreach(targetUrl => scraper.scrape(targetUrl))
+    targetUrls.par.foreach(targetUrl => scraper.scrape(targetUrl))
     //scraper.scrape(targetUrl)
     val end = LocalDateTime.now()
     println(end.format(f))

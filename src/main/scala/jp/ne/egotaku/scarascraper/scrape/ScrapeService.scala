@@ -31,7 +31,7 @@ class ScrapeImpl {
   }
 
   def download(list: List[Element]) = {
-    val result = list.map(e => {
+    val result = list.par.map(e => {
       if (e.attr("src").startsWith("http://")) {
         val file = save(e.attr("src"))
         if (imageSizeCheck(file)) {
@@ -52,7 +52,15 @@ class ScrapeImpl {
 
   def moveImage(file: File) = {
     val path = file.getPath()
-    Process("mv " + path + " /Users/takuya_st/moveimage/" + file.getName).lineStream
+    try {
+      Process("ls " + path).lineStream.toList
+      if (Process("ls " + path).lineStream.toList.length > 0) {
+        Process("mv " + path + " /Users/takuya_st/moveimage/" + file.getName).lineStream
+      }
+    } catch {
+      case e: Exception =>
+    }
+
   }
 
   def imageSizeCheck(file: File) = {
