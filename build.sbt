@@ -4,6 +4,8 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
+javaOptions in run += "-Djava.library.path=/Users/takuya_st/scala_scraping/lib"
+
 libraryDependencies ++= Seq(
   "org.seleniumhq.webdriver" % "webdriver-htmlunit" % "0.9.7376",
   "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3-1",

@@ -3,6 +3,7 @@ import jp.ne.egotaku.scarascraper.scrape.stream.ScrapeStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+
 object ScrapeMain {
   def main(args: Array[String]): Unit = {
     //val scraper = new ScrapeImpl()
