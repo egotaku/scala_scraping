@@ -6,43 +6,33 @@ package jp.ne.egotaku.scarascraper.scrape
 
 import java.io.File
 
+import akka.actor.ActorRef
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
-import net.ruippeixotog.scalascraper.model.Element
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
-
 import scala.concurrent.{ExecutionContext, Future}
-import scalax.io.Resource
 
-class ScrapeImpl {
+class ScrapeImpl(actRef: ActorRef) {
   val browser = JsoupBrowser()
-  var sequence = 1
-  implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
-  def scrape(url: String) = Future {
-    val doc = browser.get(url)
-    val images = doc >?> elementList("img")
-    images match {
-      case Some(l) => download(l)
-      case None => List.empty[File]
-    }
-  }
-  def download(list: List[Element]) = {
-    //println(list)
-    //list.foreach(e => if (e.attr("src").startsWith("https://")) save(e.attr("src")))
-    for {
-      e <- list
-      if (e.attr("src").startsWith("http://"))
-    } yield {
-      save(e.attr("src"))
-    }
-  }
+  val pageLimit = 1000
+  val depthLimit = 2
 
-  private def save(url: String) = {
-    //println(url)
-    val data = Resource.fromURL(url).byteArray
-    val file = new File(s"/Users/takuya_st/testimage/$sequence")
-    sequence += 1
-    Resource.fromFile(file).write(data)
-    file
+  implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
+
+  def scrape(seedUrl: String, pageCount: Int, currentDepth: Int):Future[Unit] = Future {
+    if (currentDepth <= depthLimit && pageCount <= pageLimit) {
+      val doc = browser.get(seedUrl)
+      val images = doc >?> elementList("img")
+      val links = doc >?> elementList("a")
+      images match {
+        case Some(l) => actRef ! l
+        case None => List.empty[File]
+      }
+      links match {
+        case Some(l) => l.foreach { lt =>
+          scrape(lt.attr("href"), pageCount + 1, currentDepth + 1)
+        }
+      }
+    }
   }
 }
