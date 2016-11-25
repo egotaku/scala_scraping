@@ -5,32 +5,21 @@ import java.io.File
 import akka.actor.Actor
 import net.ruippeixotog.scalascraper.model.Element
 
+import scala.concurrent.Future
 import scalax.io.Resource
 
 /**
   * Created by takuya_st on 2016/11/24.
   */
-class ImageSave extends Actor {
+class ImageSave {
 
   var sequence = 1
 
-  override def receive: Receive = {
-    case l: List[Element] => if (!l.isEmpty) download(l)
-    case other => throw new RuntimeException("none image list")
+  def download(e: Element) = Future[File] {
+    if (e.attr("src").startsWith("http://")) save(e.attr("src"))
   }
 
-  def download(list: List[Element]) = {
-    //println(list)
-    //list.foreach(e => if (e.attr("src").startsWith("https://")) save(e.attr("src")))
-    for {
-      e <- list
-      if (e.attr("src").startsWith("http://"))
-    } yield {
-      save(e.attr("src"))
-    }
-  }
-
-  private def save(url: String) = {
+  private def save(url: String): File = {
     //println(url)
     val data = Resource.fromURL(url).byteArray
     val file = new File(s"/Users/takuya_st/testimage/$sequence")

@@ -15,41 +15,51 @@ import javax.imageio.ImageIO
 
 import scala.sys.process._
 import jp.ne.egotaku.scarascraper.scrape._
+import net.ruippeixotog.scalascraper.model.Element
 
-class ScrapeStream {
+class ScrapeStream extends Actor {
   implicit val system = ActorSystem("HogeSystem")
   implicit val materializer = ActorMaterializer()
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  val targetUrls: List[String] = List (
-    "http://seiga.nicovideo.jp/tag/%E3%83%9E%E3%82%B7%E3%83%A5%E3%83%BB%E3%82%AD%E3%83%AA%E3%82%A8%E3%83%A9%E3%82%A4%E3%83%88",
-    "http://seiga.nicovideo.jp/tag/%E3%82%BB%E3%82%A4%E3%83%90%E3%83%BC",
-    "http://seiga.nicovideo.jp/search/%E3%82%A4%E3%83%AA%E3%83%A4?target=illust"
-  )
-  val scraper = new ScrapeImpl()
-
-  val source = Source(targetUrls).mapAsyncUnordered(3) { url =>
-    scraper.scrape(url)
+  override def receive: Receive = {
+    case l: List[Element] => if (!l.isEmpty) run(l)
+    case other => throw new RuntimeException("none image list")
   }
 
-  val step = Flow[List[File]].mapAsyncUnordered(3) { files =>
-    Future (
-      for {
-        file <- files
-        if (imageSizeCheck(file))
-      } yield file
-    )
+  private def run(l: List[Element]) = {
+    checkAndMove(l).run()
   }
 
-  val sink = Sink.foreachParallel[List[File]](3) { files =>
-    files.map(file => moveImage(file))
+  private def checkAndMove(l: List[Element]) = {
+    val imageSave = new ImageSave()
+    val source = Source(l).mapAsyncUnordered(3) { e =>
+      imageSave.download(e)
+    }
+
+    val step = Flow[File].mapAsyncUnordered(3) { file =>
+      Future (if (imageSizeCheck(file)) Some(file) else None)
+    }
+
+    val sink = Sink.foreachParallel[Option[File]](3) { file =>
+      file match {
+        case Some(f) => moveImage(f)
+        case None => _
+      }
+    }
+
+    source via step to sink
   }
 
-  val graph = source via step to sink
 
-  def run(): Unit = {
-    graph.run()
-  }
+  val scraper = new ScrapeImpl(system.actorOf(Props(classOf[ImageSave])))
+
+ /* val source = Source(targetUrls).mapAsyncUnordered(3) { url =>
+    scraper.scrape(url, 1, 1)
+  }*/
+
+
+
   /*
   val s = Source(1 to 10000).mapAsyncUnordered(3) { num =>
     Future(num)
